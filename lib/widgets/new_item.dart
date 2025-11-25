@@ -25,6 +25,10 @@ class _NewItemState extends State<NewItem>{
                 label: Text("Name"),
               ),
               validator: (value){
+                if(value == null || value.isEmpty || value.length <= 1 || value.length > 50)
+                {
+                  return "Must have a name between 2 and 50 characters long";
+                }
                 return null;
               },
             ),
@@ -37,6 +41,13 @@ class _NewItemState extends State<NewItem>{
                     label: Text("Quantity")
                   ),
                   initialValue: '1',
+                  validator: (value){
+                     if(value == null || value.isEmpty || int.tryParse(value) == null || int.tryParse(value)! <= 0)
+                {
+                  return "Must Enter a quantity greater than 0";
+                }
+                return null;
+                  },
                 ),
               ),
               const SizedBox(width: 5),
@@ -72,7 +83,7 @@ class _NewItemState extends State<NewItem>{
                 ),
               ElevatedButton(
                 onPressed: (){}, 
-                child: Text("Submit"),
+                child: Text("Add Item"),
                 ),
             ],)
           ],
