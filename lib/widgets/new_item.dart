@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/data/dummy_items.dart';
+import 'package:shopping_list/model/category.dart';
 
 class NewItem extends StatefulWidget {
   const NewItem({super.key});
@@ -10,6 +11,19 @@ class NewItem extends StatefulWidget {
   }}
 
 class _NewItemState extends State<NewItem>{
+  final _formkey = GlobalKey<FormState>();
+  var _enteredName = '';
+  var _enteredQuantity = 1;
+  var _selectedCategory = categories[Categories.vegetables]!;
+
+  void _saveItem(){
+    _formkey.currentState!.validate();
+    _formkey.currentState!.save();
+    print(_enteredName);
+    print(_enteredQuantity);
+    print(_selectedCategory);
+  }
+  @override
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(
@@ -17,6 +31,7 @@ class _NewItemState extends State<NewItem>{
       ),
       body: Padding(padding: EdgeInsets.all(12),
       child: Form(
+        key: _formkey,
         child:Column(
           children: [
             TextFormField(
@@ -31,6 +46,9 @@ class _NewItemState extends State<NewItem>{
                 }
                 return null;
               },
+              onSaved: (value){
+                _enteredName = value!;
+              },
             ),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -40,13 +58,16 @@ class _NewItemState extends State<NewItem>{
                   decoration: InputDecoration(
                     label: Text("Quantity")
                   ),
-                  initialValue: '1',
+                  initialValue: _enteredQuantity.toString(),
                   validator: (value){
                      if(value == null || value.isEmpty || int.tryParse(value) == null || int.tryParse(value)! <= 0)
                 {
                   return "Must Enter a quantity greater than 0";
                 }
-                return null;
+                    return null;
+                  },
+                   onSaved: (value){
+                    _enteredQuantity = int.parse(value!);
                   },
                 ),
               ),
@@ -56,7 +77,7 @@ class _NewItemState extends State<NewItem>{
                   items: [
                     for(final category in categories.entries)
                     DropdownMenuItem(
-                      value: category.value,
+                      value: _selectedCategory,
                       child: Row(
                         children: [
                           Container(
@@ -69,7 +90,11 @@ class _NewItemState extends State<NewItem>{
                         ],
                       ))  
                   ], 
-                  onChanged: (value){}
+                  onChanged: (value){
+                    setState(() {
+                      _selectedCategory = value!;
+                    });
+                  }
                   ),
               )
             ],),
@@ -78,11 +103,11 @@ class _NewItemState extends State<NewItem>{
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
               TextButton(
-                onPressed:(){},
+                onPressed:(){_formkey.currentState!.reset();},
                 child: Text("Reset")
                 ),
               ElevatedButton(
-                onPressed: (){}, 
+                onPressed: _saveItem, 
                 child: Text("Add Item"),
                 ),
             ],)
