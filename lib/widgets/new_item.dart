@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/data/dummy_items.dart';
 import 'package:shopping_list/model/category.dart';
+import 'package:shopping_list/model/grocery_item.dart';
+import 'package:http/http.dart' as http;
 
 class NewItem extends StatefulWidget {
   const NewItem({super.key});
@@ -16,12 +20,26 @@ class _NewItemState extends State<NewItem>{
   var _enteredQuantity = 1;
   var _selectedCategory = categories[Categories.vegetables]!;
 
-  void _saveItem(){
-    _formkey.currentState!.validate();
+  void _saveItem() async{
+   if( _formkey.currentState!.validate()){
     _formkey.currentState!.save();
-    print(_enteredName);
-    print(_enteredQuantity);
-    print(_selectedCategory);
+    final url = Uri.https('https://shopping-list-25850-default-rtdb.firebaseio.com', 'shopping-list.json');
+    final response = await http.post(url, 
+          headers:{'Content-Type':'application/json'},
+          body: json.encode({
+          'name': _enteredName,
+          'quantity': _enteredQuantity,
+          'category': _selectedCategory.title,
+        }),
+      );
+      print(response.body);
+      print(response.statusCode);
+      if(!context.mounted)
+      {
+        return;
+      }
+      Navigator.of(context).pop();
+   }
   }
   @override
   Widget build(BuildContext context){
@@ -60,7 +78,10 @@ class _NewItemState extends State<NewItem>{
                   ),
                   initialValue: _enteredQuantity.toString(),
                   validator: (value){
-                     if(value == null || value.isEmpty || int.tryParse(value) == null || int.tryParse(value)! <= 0)
+                     if(value == null || 
+                        value.isEmpty || 
+                        int.tryParse(value) == null || 
+                        int.tryParse(value)! <= 0)
                 {
                   return "Must Enter a quantity greater than 0";
                 }
