@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shopping_list/data/dummy_items.dart';
+import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/model/grocery_item.dart';
 import 'package:shopping_list/widgets/new_item.dart';
+import 'package:http/http.dart' as http;
 
 class GroceryList extends StatefulWidget {
   GroceryList({super.key});
@@ -10,22 +12,55 @@ class GroceryList extends StatefulWidget {
   State<GroceryList> createState() => _GroceryListState();
 }
   class _GroceryListState extends State<GroceryList>{
-    final List<GroceryItem> _groceryItems = [];
+    List<GroceryItem> _groceryItems = [];
+    var _isLoading = true;
+    void initState(){
+      super.initState();
+      _loaditems();
+    }
+
+    void _loaditems() async{
+      final url = Uri.https(
+        'shopping-list-25850-default-rtdb.firebaseio.com',
+        'shopping-list.json',
+      );
+      final response = await http.get(url);
+      //print(response.body);
+      final Map<String,dynamic> listData = json.decode(response.body);
+      final List<GroceryItem> _loadedItems = [];
+      for (final item in listData.entries){
+        final currentCat = categories.entries
+        .firstWhere(
+          (catItem) => catItem.value.title == item.value['category'],
+        ).value;
+        _loadedItems.add(
+          GroceryItem(
+            id: item.key, 
+            name: item.value['name'], 
+            quantity: item.value['quantity'], 
+            category: currentCat
+            ),
+        );
+      }
+      setState(() {
+        _groceryItems = _loadedItems;
+        _isLoading = false;
+      });
+    }
 
     void _addItem() async{ 
       final newItem = await Navigator.of(
         context)
         .push<GroceryItem>(MaterialPageRoute(builder: (ctx) => const NewItem())
       );
-      if(newItem == null){
+      if (newItem == null){
         return;
       }
-      else{
-        setState(() {
-          _groceryItems.add(newItem);
-        });
-      }
+      setState(() {
+        _groceryItems.add(newItem);
+      });
     }
+
     void _removeItem(GroceryItem item){
       setState(() {
         _groceryItems.remove(item);
@@ -35,6 +70,9 @@ class GroceryList extends StatefulWidget {
   @override
   Widget build(BuildContext context) {
     Widget content = const Center(child: Text("Pease click the + button to add Item"),);
+    if(_isLoading){
+      content = const Center(child: CircularProgressIndicator(),);
+    }
     if(_groceryItems.isNotEmpty){
       content = ListView.builder(
         itemCount: _groceryItems.length,
