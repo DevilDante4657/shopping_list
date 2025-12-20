@@ -6,9 +6,9 @@ import 'package:shopping_list/widgets/new_item.dart';
 import 'package:http/http.dart' as http;
 
 class GroceryList extends StatefulWidget {
-  GroceryList({super.key});
-  @override
+  const GroceryList({super.key});
 
+  @override
   State<GroceryList> createState() => _GroceryListState();
 }
   class _GroceryListState extends State<GroceryList>{
@@ -16,6 +16,7 @@ class GroceryList extends StatefulWidget {
     var _isLoading = true;
     String ? _error = '';
 
+    @override
     void initState(){
       super.initState();
       _loaditems();
@@ -78,9 +79,11 @@ class GroceryList extends StatefulWidget {
         'shopping-list/${item.id}.json',
       );
       var response = await http.delete(url);
+      if (response.statusCode > 400){
       setState(() {
-        _groceryItems.remove(item);
+        _groceryItems.insert(index, item);
       });
+    }
     }
 
   @override
